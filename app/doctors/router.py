@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -7,6 +8,7 @@ from app.schemas import (
     DoctorCreate,
     DoctorUpdate,
     DoctorResponse,
+    DoctorPaginatedResponse,
     PatientResponse
 )
 
@@ -59,17 +61,29 @@ def create_doctor_api(
 # -------------------------
 # GET ALL DOCTORS
 # -------------------------
-
-@router.get(
-    "",
-    response_model=list[DoctorResponse]
-)
+@router.get("", response_model=DoctorPaginatedResponse)
 def list_doctors(
+    specialization: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return get_doctors(db)
+    total, doctors = get_doctors(
+        db,
+        specialization=specialization,
+        is_active=is_active,
+        page=page,
+        limit=limit
+    )
 
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "data": doctors
+    }
 
 # -------------------------
 # GET ONE DOCTOR
@@ -104,6 +118,26 @@ def get_doctor_api(
     response_model=DoctorResponse
 )
 def update_doctor_api(
+    doctor_id: int,
+    doctor_data: DoctorUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin)
+):
+    doctor = update_doctor(
+        db,
+        doctor_id,
+        doctor_data
+    )
+
+    if not doctor:
+        raise HTTPException(
+            status_code=404,
+            detail="Doctor not found"
+        )
+
+    return doctor
+@router.patch("/{doctor_id}", response_model=DoctorResponse)
+def patch_doctor_api(
     doctor_id: int,
     doctor_data: DoctorUpdate,
     db: Session = Depends(get_db),
@@ -182,51 +216,15 @@ def assign_patient_api(
 # GET DOCTOR'S PATIENTS
 # -------------------------
 
-@router.get(
-    "/{doctor_id}/patients",
-    response_model=list[PatientResponse]
-)
-def doctor_patients_api(
-    doctor_id: int,
+@router.get("", response_model=list[DoctorResponse])
+def list_doctors(
+    specialization: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    # Admin can view any doctor's patients
-    if current_user.role == "admin":
-        patients = get_doctor_patients(
-            db,
-            doctor_id
-        )
-
-        if patients is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Doctor not found"
-            )
-
-        return patients
-
-    # Doctor can only view their own patients
-    if current_user.role == "doctor":
-
-        if not current_user.doctor:
-            raise HTTPException(
-                status_code=403,
-                detail="Doctor profile not linked"
-            )
-
-        if current_user.doctor.id != doctor_id:
-            raise HTTPException(
-                status_code=403,
-                detail="You can only view your own patients"
-            )
-
-        return get_doctor_patients(
-            db,
-            doctor_id
-        )
-
-    raise HTTPException(
-        status_code=403,
-        detail="Access denied"
+    return get_doctors(
+        db,
+        specialization=specialization,
+        is_active=is_active
     )

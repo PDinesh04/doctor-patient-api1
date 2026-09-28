@@ -49,8 +49,13 @@ class DoctorResponse(BaseModel):
 class PatientCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     age: int = Field(gt=0)
-    phone: str = Field(
-        pattern=r"^\d{10,15}$"
+    phone: str = Field(pattern=r"^\d{10}$")
+class PatientUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=100)
+    age: int | None = Field(default=None, gt=0)
+    phone: str | None = Field(
+        default=None,
+        pattern=r"^\d{10}$"
     )
 
 
@@ -62,3 +67,15 @@ class PatientResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class DoctorPaginatedResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    data: list[DoctorResponse]
+
+
+class PatientPaginatedResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    data: list[PatientResponse]

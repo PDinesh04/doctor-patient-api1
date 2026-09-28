@@ -204,6 +204,10 @@ def assign_patient_api(
     )
 
     if error:
+        if error == "Doctor not found":
+            raise HTTPException(status_code=404, detail=error)
+        if error == "Patient not found":
+            raise HTTPException(status_code=404, detail=error)
         raise HTTPException(
             status_code=400,
             detail=error

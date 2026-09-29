@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from app import models
 from app.schemas import PatientCreate, PatientUpdate
 
-def create_patient(db: Session, patient: PatientCreate):
+def create_patient(db: Session, patient: PatientCreate,user_id: int):
     new_patient = models.Patient(
         name=patient.name,
         age=patient.age,
-        phone=patient.phone
+        phone=patient.phone,
+        created_by = user_id,
+        updated_by = user_id
     )
 
     db.add(new_patient)
@@ -37,6 +39,7 @@ def get_patients(
 
     patients = (
         query
+        .order_by(models.Patient.id)
         .offset(offset)
         .limit(limit)
         .all()
@@ -54,7 +57,8 @@ def get_patient(db: Session, patient_id: int):
 def update_patient(
     db: Session,
     patient_id: int,
-    patient_data: PatientUpdate
+    patient_data: PatientUpdate,
+    user_id: int
 ):
     patient = get_patient(db, patient_id)
 
@@ -65,6 +69,7 @@ def update_patient(
 
     for key, value in update_data.items():
         setattr(patient, key, value)
+    patient.updated_by = user_id
 
     db.commit()
     db.refresh(patient)

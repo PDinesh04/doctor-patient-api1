@@ -30,7 +30,13 @@ def create_patient_api(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin)
 ):
-    return create_patient(db, patient)
+    new_patient = create_patient(
+        db,
+        patient,
+        current_user.id
+    )
+
+    return new_patient
 
 
 @router.get("", response_model=PatientPaginatedResponse)
@@ -104,7 +110,8 @@ def update_patient_api(
     patient = update_patient(
         db,
         patient_id,
-        patient_data
+        patient_data,
+        current_user.id
     )
 
     if not patient:
@@ -126,7 +133,8 @@ def patch_patient_api(
     patient = update_patient(
         db,
         patient_id,
-        patient_data
+        patient_data,
+        current_user.id
     )
 
     if not patient:

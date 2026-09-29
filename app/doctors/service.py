@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import models
 from app.schemas import DoctorCreate, DoctorUpdate
 
 
-def create_doctor(db: Session, doctor: DoctorCreate):
+def create_doctor(db: Session, doctor: DoctorCreate,user_id: int):
     existing_doctor = (
         db.query(models.Doctor)
         .filter(models.Doctor.email == doctor.email)
@@ -18,7 +19,9 @@ def create_doctor(db: Session, doctor: DoctorCreate):
         name=doctor.name,
         specialization=doctor.specialization,
         email=doctor.email,
-        is_active=True
+        is_active=True,
+        created_by=user_id,
+        updated_by=user_id
     )
 
     db.add(new_doctor)
@@ -72,7 +75,8 @@ def get_doctor(db: Session, doctor_id: int):
 def update_doctor(
     db: Session,
     doctor_id: int,
-    doctor_data: DoctorUpdate
+    doctor_data: DoctorUpdate,
+    user_id: int
 ):
     doctor = get_doctor(db, doctor_id)
 
@@ -96,6 +100,7 @@ def update_doctor(
 
     for key, value in update_data.items():
         setattr(doctor, key, value)
+    doctor.updated_by = user_id
 
     db.commit()
     db.refresh(doctor)

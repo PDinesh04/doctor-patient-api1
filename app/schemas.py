@@ -14,8 +14,7 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -44,8 +43,7 @@ class DoctorResponse(BaseModel):
     email: EmailStr
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 class PatientCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     age: int = Field(gt=0)
@@ -65,8 +63,7 @@ class PatientResponse(BaseModel):
     age: int
     phone: str
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 class DoctorPaginatedResponse(BaseModel):
     total: int
     page: int
@@ -79,3 +76,27 @@ class PatientPaginatedResponse(BaseModel):
     page: int
     limit: int
     data: list[PatientResponse]
+from datetime import datetime
+from typing import Literal
+class AppointmentCreate(BaseModel):
+    doctor_id: int
+    patient_id: int
+    appointment_date: datetime
+    status: Literal["scheduled", "completed", "cancelled"] = "scheduled"
+
+
+class AppointmentUpdate(BaseModel):
+    doctor_id: int | None = None
+    patient_id: int | None = None
+    appointment_date: datetime | None = None
+    status: Literal["scheduled", "completed", "cancelled"] | None = None
+
+
+class AppointmentResponse(BaseModel):
+    id: int
+    doctor_id: int
+    patient_id: int
+    appointment_date: datetime
+    status: str
+
+    model_config = {"from_attributes": True}

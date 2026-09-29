@@ -1,4 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -47,7 +46,7 @@ def create_doctor_api(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin)
 ):
-    new_doctor = create_doctor(db, doctor)
+    new_doctor = create_doctor(db, doctor,current_user.id)
 
     if new_doctor is None:
         raise HTTPException(
@@ -123,40 +122,55 @@ def update_doctor_api(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin)
 ):
-    doctor = update_doctor(
+    doctor, error = update_doctor(
         db,
         doctor_id,
         doctor_data
     )
 
-    if not doctor:
+    if error:
+        if error == "Doctor not found":
+            raise HTTPException(
+                status_code=404,
+                detail=error
+            )
+
         raise HTTPException(
-            status_code=404,
-            detail="Doctor not found"
+            status_code=400,
+            detail=error
         )
 
     return doctor
-@router.patch("/{doctor_id}", response_model=DoctorResponse)
+@router.patch(
+    "/{doctor_id}",
+    response_model=DoctorResponse
+)
 def patch_doctor_api(
     doctor_id: int,
     doctor_data: DoctorUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin)
 ):
-    doctor = update_doctor(
+    doctor, error = update_doctor(
         db,
         doctor_id,
-        doctor_data
+        doctor_data,
+        current_user.id
     )
 
-    if not doctor:
+    if error:
+        if error == "Doctor not found":
+            raise HTTPException(
+                status_code=404,
+                detail=error
+            )
+
         raise HTTPException(
-            status_code=404,
-            detail="Doctor not found"
+            status_code=400,
+            detail=error
         )
 
     return doctor
-
 
 # -------------------------
 # DELETE DOCTOR
@@ -215,20 +229,3 @@ def assign_patient_api(
 
     return patient
 
-
-# -------------------------
-# GET DOCTOR'S PATIENTS
-# -------------------------
-
-@router.get("", response_model=list[DoctorResponse])
-def list_doctors(
-    specialization: str | None = Query(default=None),
-    is_active: bool | None = Query(default=None),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
-):
-    return get_doctors(
-        db,
-        specialization=specialization,
-        is_active=is_active
-    )

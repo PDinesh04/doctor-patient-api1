@@ -568,3 +568,48 @@ http://127.0.0.1:8000/redoc
 ## License
 
 This project was created as a FastAPI Doctor-Patient Management API assignment.
+
+## Billing & Payments
+
+The API supports billing management for doctors and patients.
+
+### Billing Features
+
+- Create billing records
+- View billing details
+- View billings by patient
+- View billings by doctor
+- Update billing using PUT
+- Partial update using PATCH
+- Soft delete billing records
+- Automatic total amount calculation
+- Payment status:
+  - pending
+  - paid
+  - cancelled
+- Payment mode:
+  - cash
+  - card
+  - upi
+- Prevent duplicate billing for the same appointment
+- Prevent billing for cancelled appointments
+- Prevent billing for inactive doctors
+- Validate doctor, patient and appointment relationships
+
+### Billing APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/v1/billings` | Create billing |
+| GET | `/api/v1/billings` | List billings |
+| GET | `/api/v1/billings/{billing_id}` | Get billing |
+| GET | `/api/v1/billings/patients/{patient_id}` | Patient billings |
+| GET | `/api/v1/billings/doctors/{doctor_id}` | Doctor billings |
+| PUT | `/api/v1/billings/{billing_id}` | Update billing |
+| PATCH | `/api/v1/billings/{billing_id}` | Partial update |
+| DELETE | `/api/v1/billings/{billing_id}` | Soft delete |
+
+### Billing Calculation
+
+```text
+Total Amount = Consultation Fee + Additional Charges

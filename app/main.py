@@ -1,21 +1,26 @@
-import logging
 import time
-from collections import defaultdict, deque
-
-from fastapi import FastAPI, Depends, Request, HTTPException
+from starlette.requests import Request
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+
+from collections import defaultdict, deque
+from fastapi import FastAPI, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
-from starlette.requests import Request
-
-from app.database import engine, Base
+from app.database import engine
+from app.database import Base
 from app import models
 from app.auth.router import router as auth_router
 from app.dependencies import get_current_user
 from app.doctors.router import router as doctors_router
 from app.appointments.router import router as appointments_router
 from app.patients.router import router as patients_router
+from app.billing.router import router as billing_router
+import logging
+
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -142,6 +147,7 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(doctors_router, prefix="/api/v1")
 app.include_router(patients_router, prefix="/api/v1")
 app.include_router(appointments_router, prefix="/api/v1")
+app.include_router(billing_router, prefix="/api/v1")
 
 
 

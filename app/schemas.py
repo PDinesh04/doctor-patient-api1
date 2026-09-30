@@ -76,7 +76,10 @@ class PatientPaginatedResponse(BaseModel):
     page: int
     limit: int
     data: list[PatientResponse]
-from datetime import datetime
+
+
+
+from datetime import datetime, date
 from typing import Literal
 class AppointmentCreate(BaseModel):
     doctor_id: int
@@ -100,3 +103,103 @@ class AppointmentResponse(BaseModel):
     status: str
 
     model_config = {"from_attributes": True}
+# ---------------------------------------------------------
+# BILLING SCHEMAS
+# ---------------------------------------------------------
+
+from typing import Literal
+
+
+class BillingCreate(BaseModel):
+    patient_id: int
+    doctor_id: int
+    appointment_id: int | None = None
+
+    consultation_fee: float = Field(
+        ge=0
+    )
+
+    additional_charges: float = Field(
+        default=0,
+        ge=0
+    )
+
+    payment_status: Literal[
+        "pending",
+        "paid",
+        "cancelled"
+    ] = "pending"
+
+    payment_mode: Literal[
+        "cash",
+        "card",
+        "upi"
+    ]
+
+
+class BillingUpdate(BaseModel):
+    consultation_fee: float | None = Field(
+        default=None,
+        ge=0
+    )
+
+    additional_charges: float | None = Field(
+        default=None,
+        ge=0
+    )
+
+    payment_status: Literal[
+        "pending",
+        "paid",
+        "cancelled"
+    ] | None = None
+
+    payment_mode: Literal[
+        "cash",
+        "card",
+        "upi"
+    ] | None = None
+
+
+class BillingResponse(BaseModel):
+    id: int
+    patient_id: int
+    doctor_id: int
+    appointment_id: int | None
+
+    consultation_fee: float
+    additional_charges: float
+    total_amount: float
+
+    payment_status: str
+    payment_mode: str
+
+    is_active: bool
+
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class BillingPaginatedResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    items: list[BillingResponse]
+
+
+# ---------------------------------------------------------
+# REVENUE REPORT SCHEMA
+# ---------------------------------------------------------
+
+class RevenueReportItem(BaseModel):
+    doctor_id: int
+    date: date
+    revenue: float
+
+
+class RevenueReportResponse(BaseModel):
+    items: list[RevenueReportItem]

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Float, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
 
@@ -176,4 +176,112 @@ class Appointment(Base):
     patient = relationship(
         "Patient",
         back_populates="appointments"
+    )
+class Billing(Base):
+    __tablename__ = "billings"
+
+    __table_args__ = (
+        CheckConstraint(
+            "consultation_fee >= 0",
+            name="check_consultation_fee_positive"
+        ),
+        CheckConstraint(
+            "additional_charges >= 0",
+            name="check_additional_charges_positive"
+        ),
+        CheckConstraint(
+            "total_amount >= 0",
+            name="check_total_amount_positive"
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    patient_id = Column(
+        Integer,
+        ForeignKey("patients.id"),
+        nullable=False
+    )
+
+    doctor_id = Column(
+        Integer,
+        ForeignKey("doctors.id"),
+        nullable=False
+    )
+
+    appointment_id = Column(
+        Integer,
+        ForeignKey("appointments.id"),
+        nullable=True
+    )
+
+    consultation_fee = Column(
+        Float,
+        nullable=False
+    )
+
+    additional_charges = Column(
+        Float,
+        nullable=False,
+        default=0
+    )
+
+    total_amount = Column(
+        Float,
+        nullable=False
+    )
+
+    payment_status = Column(
+        String,
+        nullable=False,
+        default="pending"
+    )
+
+    payment_mode = Column(
+        String,
+        nullable=False
+    )
+
+    is_active = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False
+    )
+
+    created_by = Column(
+        Integer,
+        nullable=True
+    )
+
+    updated_by = Column(
+        Integer,
+        nullable=True
+    )
+
+    patient = relationship(
+        "Patient",
+        backref="billings"
+    )
+
+    doctor = relationship(
+        "Doctor",
+        backref="billings"
+    )
+
+    appointment = relationship(
+        "Appointment",
+        backref="billing"
     )
